@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "name": "iBaza Toshkent markazi",
+    "address": "Toshkent shahri, Chilonzor tumani, 1-mavze",
+    "latitude": 41.2995,
+    "longitude": 69.2401
+  },
+  {
+    "id": "2",
+    "name": "iBaza Samarqand filiali",
+    "address": "Samarqand shahri, Registon ko'chasi, 15-uy",
+    "latitude": 39.627,
+    "longitude": 66.9749
+  },
+  {
+    "name": "Test Store",
+    "address": "Test Address",
+    "latitude": 41.2995,
+    "longitude": 69.2401,
+    "id": "3"
+  },
+  {
+    "name": "robocode",
+    "address": "Андижан, улица Лермонтова, 22",
+    "latitude": 40.746972,
+    "longitude": 72.345449,
+    "id": "4"
+  },
+  {
+    "name": "test",
+    "address": "testt",
+    "latitude": 40.749169,
+    "longitude": 72.345714,
+    "id": "5"
+  }
+]
