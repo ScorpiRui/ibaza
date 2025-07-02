@@ -133,6 +133,7 @@ Bot ma'lumotlarni JSON formatida saqlaydi:
 ## 📞 Qo'llab-quvvatlash
 
 Muammolar yoki savollar bo'lsa, iltimos bog'laning.
+tel:+998934766109
 
 ## 📄 Litsenziya
 
