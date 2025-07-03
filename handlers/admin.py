@@ -147,7 +147,8 @@ async def handle_location_address(message: Message, state: FSMContext):
         f"✅ **Manzil:** {message.text}\n\n"
         f"Endi do'kon joylashuvini yuboring:",
         reply_markup=keyboard,
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        one_time_keyboard=False
     )
 
 @router.message(AddLocationStates.waiting_for_location)
