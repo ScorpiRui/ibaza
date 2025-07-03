@@ -125,6 +125,30 @@ def save_model(model: Dict) -> bool:
     models.append(model)
     return save_json_data(MODELS_FILE, models)
 
+def update_model(model_id: str, updated_data: Dict) -> bool:
+    """Update an existing model in storage"""
+    models = get_models()
+    
+    for i, model in enumerate(models):
+        if model['id'] == model_id:
+            # Preserve the ID and update other fields
+            updated_data['id'] = model_id
+            models[i] = updated_data
+            return save_json_data(MODELS_FILE, models)
+    
+    return False
+
+def delete_model(model_id: str) -> bool:
+    """Delete a model from storage"""
+    models = get_models()
+    
+    for i, model in enumerate(models):
+        if model['id'] == model_id:
+            del models[i]
+            return save_json_data(MODELS_FILE, models)
+    
+    return False
+
 def get_model_by_id(model_id: str) -> Optional[Dict]:
     """Get model by ID"""
     models = get_models()

@@ -121,6 +121,8 @@ def get_admin_price_keyboard() -> InlineKeyboardMarkup:
     """Admin price management keyboard"""
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="➕ Model qo'shish", callback_data="add_model"))
+    builder.add(InlineKeyboardButton(text="✏️ Modellarni tahrirlash", callback_data="edit_models"))
+    builder.add(InlineKeyboardButton(text="🗑️ Modellarni o'chirish", callback_data="delete_models"))
     builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_panel"))
     builder.adjust(1)
     return builder.as_markup()
@@ -166,4 +168,50 @@ def get_menu_keyboard() -> ReplyKeyboardMarkup:
         one_time_keyboard=True
     )
     return keyboard
+
+def get_models_edit_keyboard(models: list) -> InlineKeyboardMarkup:
+    """Keyboard for editing models"""
+    builder = InlineKeyboardBuilder()
+    
+    for model in models:
+        builder.add(InlineKeyboardButton(
+            text=f"✏️ {model['name']}", 
+            callback_data=f"edit_model_{model['id']}"
+        ))
+    
+    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_price"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def get_models_delete_keyboard(models: list) -> InlineKeyboardMarkup:
+    """Keyboard for deleting models"""
+    builder = InlineKeyboardBuilder()
+    
+    for model in models:
+        builder.add(InlineKeyboardButton(
+            text=f"🗑️ {model['name']}", 
+            callback_data=f"delete_model_{model['id']}"
+        ))
+    
+    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_price"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def get_model_edit_options_keyboard(model_id: str) -> InlineKeyboardMarkup:
+    """Keyboard for model edit options"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="✏️ Nomi", callback_data=f"edit_model_name_{model_id}"))
+    builder.add(InlineKeyboardButton(text="💾 Xotira hajmlari", callback_data=f"edit_model_memories_{model_id}"))
+    builder.add(InlineKeyboardButton(text="💰 Narxlari", callback_data=f"edit_model_prices_{model_id}"))
+    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="edit_models"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def get_confirm_delete_keyboard(model_id: str) -> InlineKeyboardMarkup:
+    """Keyboard for confirming model deletion"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="✅ Ha, o'chirish", callback_data=f"confirm_delete_{model_id}"))
+    builder.add(InlineKeyboardButton(text="❌ Yo'q, bekor qilish", callback_data="delete_models"))
+    builder.adjust(1)
+    return builder.as_markup()
 
