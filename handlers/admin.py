@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = Router()
-
+#cdalsfa;lsfj;asjfsa
 # Admin states for adding location
 class AddLocationStates(StatesGroup):
     waiting_for_name = State()
