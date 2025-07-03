@@ -690,7 +690,7 @@ async def delete_models_handler(callback: CallbackQuery):
         parse_mode="Markdown"
     )
 
-@router.callback_query(F.data.startswith("edit_model_"))
+@router.callback_query(F.data.startswith("edit_model_") & ~F.data.startswith("edit_model_name_") & ~F.data.startswith("edit_model_memories_") & ~F.data.startswith("edit_model_prices_"))
 async def edit_model_handler(callback: CallbackQuery):
     """Handle edit specific model request"""
     if not is_admin(callback.from_user.id):
@@ -800,12 +800,15 @@ async def edit_model_name_handler(callback: CallbackQuery, state: FSMContext):
         return
     
     model_id = callback.data.split("_")[3]
+    logger.info(f"Edit model name handler called for model_id: {model_id}")
     model = get_model_by_id(model_id)
     
     if not model:
+        logger.error(f"Model not found for ID: {model_id}")
         await callback.answer("❌ Model topilmadi!")
         return
     
+    logger.info(f"Found model: {model['name']}")
     await state.set_state(EditModelStates.waiting_for_name)
     await state.update_data(model_id=model_id, current_model=model)
     
@@ -831,12 +834,15 @@ async def edit_model_memories_handler(callback: CallbackQuery, state: FSMContext
         return
     
     model_id = callback.data.split("_")[3]
+    logger.info(f"Edit model memories handler called for model_id: {model_id}")
     model = get_model_by_id(model_id)
     
     if not model:
+        logger.error(f"Model not found for ID: {model_id}")
         await callback.answer("❌ Model topilmadi!")
         return
     
+    logger.info(f"Found model: {model['name']}")
     await state.set_state(EditModelStates.waiting_for_memory_selection)
     await state.update_data(model_id=model_id, current_model=model)
     
@@ -889,12 +895,15 @@ async def edit_model_prices_handler(callback: CallbackQuery, state: FSMContext):
         return
     
     model_id = callback.data.split("_")[3]
+    logger.info(f"Edit model prices handler called for model_id: {model_id}")
     model = get_model_by_id(model_id)
     
     if not model:
+        logger.error(f"Model not found for ID: {model_id}")
         await callback.answer("❌ Model topilmadi!")
         return
     
+    logger.info(f"Found model: {model['name']}")
     await state.set_state(EditModelStates.waiting_for_prices)
     await state.update_data(model_id=model_id, current_model=model)
     
