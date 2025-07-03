@@ -1,7 +1,8 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, Location
+from aiogram.types import Message, CallbackQuery, Location, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from keyboards import (
     get_admin_panel_keyboard, get_admin_map_keyboard, get_admin_price_keyboard,
     get_cancel_keyboard, get_admin_cancel_keyboard,
@@ -25,7 +26,7 @@ class AddLocationStates(StatesGroup):
 # Admin states for adding model
 class AddModelStates(StatesGroup):
     waiting_for_name = State()
-    waiting_for_memories = State()
+    waiting_for_memory_selection = State()
     waiting_for_prices = State()
 
 # Admin session data storage
@@ -255,61 +256,154 @@ async def handle_model_name(message: Message, state: FSMContext):
         return
     
     await state.update_data(name=message.text)
-    await state.set_state(AddModelStates.waiting_for_memories)
+    await state.set_state(AddModelStates.waiting_for_memory_selection)
     
-    keyboard = get_cancel_keyboard()
+    # Create memory selection keyboard
+    builder = InlineKeyboardBuilder()
+    
+    # Memory options with proper labels
+    memory_options = [
+        ("64 GB", "64"),
+        ("128 GB", "128"), 
+        ("256 GB", "256"),
+        ("512 GB", "512"),
+        ("1 TB", "1024")
+    ]
+    
+    # Add memory selection buttons
+    for label, value in memory_options:
+        builder.add(InlineKeyboardButton(
+            text=f"⬜ {label}", 
+            callback_data=f"select_memory_{value}"
+        ))
+    
+    # Add Done and Cancel buttons
+    builder.add(InlineKeyboardButton(text="✅ Tugatish", callback_data="done_memory_selection"))
+    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"))
+    
+    # Arrange buttons in a grid
+    builder.adjust(2, 2, 1, 1)  # 2 columns for memory options, then Done and Cancel
     
     await message.answer(
         f"✅ **Model:** {message.text}\n\n"
-        f"Endi xotira hajmlarini kiriting (vergul bilan ajrating):\n"
-        f"Masalan: 64, 128, 256, 512",
-        reply_markup=keyboard,
+        f"Xotira hajmlarini tanlang (bir nechtasini tanlash mumkin):",
+        reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
 
-@router.message(AddModelStates.waiting_for_memories)
-async def handle_model_memories(message: Message, state: FSMContext):
-    """Handle model memories input"""
-    if not is_admin(message.from_user.id):
+@router.callback_query(F.data.startswith("select_memory_"))
+async def handle_memory_selection(callback: CallbackQuery, state: FSMContext):
+    """Handle memory selection"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Ruxsat yo'q!")
         return
     
-    if not message.text:
-        await message.answer(
-            "❌ Iltimos, xotira hajmlarini kiriting!",
-            reply_markup=get_cancel_keyboard()
-        )
+    if not callback.data:
+        await callback.answer("❌ Xatolik yuz berdi!")
         return
     
-    try:
-        memories = [int(x.strip()) for x in message.text.split(',')]
-        if not memories:
-            raise ValueError("Empty list")
-    except ValueError:
-        await message.answer(
-            "❌ Noto'g'ri format! Iltimos, raqamlarni vergul bilan ajrating.\n"
-            "Masalan: 64, 128, 256",
-            reply_markup=get_cancel_keyboard()
-        )
+    memory_value = callback.data.split("_")[2]
+    data = await state.get_data()
+    
+    # Initialize selected memories if not exists
+    if 'selected_memories' not in data:
+        data['selected_memories'] = []
+    
+    # Toggle memory selection
+    if memory_value in data['selected_memories']:
+        data['selected_memories'].remove(memory_value)
+    else:
+        data['selected_memories'].append(memory_value)
+    
+    await state.update_data(selected_memories=data['selected_memories'])
+    
+    # Update the keyboard to show selected items
+    builder = InlineKeyboardBuilder()
+    
+    # Memory options with proper labels
+    memory_options = [
+        ("64 GB", "64"),
+        ("128 GB", "128"), 
+        ("256 GB", "256"),
+        ("512 GB", "512"),
+        ("1 TB", "1024")
+    ]
+    
+    # Add memory selection buttons with checkmarks
+    for label, value in memory_options:
+        checkbox = "✅" if value in data['selected_memories'] else "⬜"
+        builder.add(InlineKeyboardButton(
+            text=f"{checkbox} {label}", 
+            callback_data=f"select_memory_{value}"
+        ))
+    
+    # Add Done and Cancel buttons
+    builder.add(InlineKeyboardButton(text="✅ Tugatish", callback_data="done_memory_selection"))
+    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"))
+    
+    # Arrange buttons in a grid
+    builder.adjust(2, 2, 1, 1)
+    
+    # Show selected memories count
+    selected_count = len(data['selected_memories'])
+    selected_text = f"Tanlangan: {selected_count} ta" if selected_count > 0 else "Hech qanday tanlanmagan"
+    
+    await callback.message.edit_text(
+        f"✅ **Model:** {data.get('name', '')}\n\n"
+        f"Xotira hajmlarini tanlang (bir nechtasini tanlash mumkin):\n"
+        f"📊 {selected_text}",
+        reply_markup=builder.as_markup(),
+        parse_mode="Markdown"
+    )
+
+@router.callback_query(F.data == "done_memory_selection")
+async def handle_done_memory_selection(callback: CallbackQuery, state: FSMContext):
+    """Handle done button for memory selection"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Ruxsat yo'q!")
         return
     
+    data = await state.get_data()
+    selected_memories = data.get('selected_memories', [])
+    
+    if not selected_memories:
+        await callback.answer("❌ Kamida bitta xotira hajmini tanlang!")
+        return
+    
+    # Convert string values to integers and sort them
+    memories = sorted([int(m) for m in selected_memories])
     await state.update_data(memories=memories)
     await state.set_state(AddModelStates.waiting_for_prices)
     
     # Create memory selection keyboard for prices
-    from aiogram.utils.keyboard import InlineKeyboardBuilder
-    from aiogram.types import InlineKeyboardButton
-    
     builder = InlineKeyboardBuilder()
+    
+    # Convert memory values to display labels
+    memory_labels = []
     for memory in memories:
+        if memory == 1024:
+            label = "1 TB"
+        else:
+            label = f"{memory} GB"
+        memory_labels.append(label)
         builder.add(InlineKeyboardButton(
-            text=f"{memory} GB narxini kiriting", 
+            text=f"{label} narxini kiriting", 
             callback_data=f"set_price_{memory}"
         ))
+    
     builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"))
     builder.adjust(1)
     
-    await message.answer(
-        f"✅ **Xotira hajmlari:** {', '.join(map(str, memories))} GB\n\n"
+    # Format memory display
+    memory_display = []
+    for memory in memories:
+        if memory == 1024:
+            memory_display.append("1 TB")
+        else:
+            memory_display.append(f"{memory} GB")
+    
+    await callback.message.edit_text(
+        f"✅ **Xotira hajmlari:** {', '.join(memory_display)}\n\n"
         f"Endi har bir xotira hajmi uchun narxlarni kiriting:",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
@@ -330,10 +424,16 @@ async def set_price_handler(callback: CallbackQuery, state: FSMContext):
     memory = int(callback.data.split("_")[2])
     await state.update_data(current_memory=memory)
     
+    # Format memory label
+    if memory == 1024:
+        memory_label = "1 TB"
+    else:
+        memory_label = f"{memory} GB"
+    
     keyboard = get_cancel_keyboard()
     
     await callback.message.edit_text(
-        f"💰 **{memory} GB uchun narxlarni kiriting**\n\n"
+        f"💰 **{memory_label} uchun narxlarni kiriting**\n\n"
         f"Format: yangi,yaxshi,o'rtacha\n"
         f"Masalan: 15000000,12000000,9000000",
         reply_markup=keyboard,
@@ -401,10 +501,18 @@ async def handle_model_prices(message: Message, state: FSMContext):
         }
         
         if save_model(model_data):
+            # Format memory display for success message
+            memory_display = []
+            for memory in memories:
+                if memory == 1024:
+                    memory_display.append("1 TB")
+                else:
+                    memory_display.append(f"{memory} GB")
+            
             await message.answer(
                 f"✅ **Model muvaffaqiyatli qo'shildi!**\n\n"
                 f"📱 **Model:** {name}\n"
-                f"💾 **Xotira hajmlari:** {', '.join(map(str, memories))} GB",
+                f"💾 **Xotira hajmlari:** {', '.join(memory_display)}",
                 reply_markup=get_admin_price_keyboard(),
                 parse_mode="Markdown"
             )
@@ -420,21 +528,74 @@ async def handle_model_prices(message: Message, state: FSMContext):
         remaining_memories = [m for m in memories if str(m) not in data['prices']]
         next_memory = remaining_memories[0]
         
-        from aiogram.utils.keyboard import InlineKeyboardBuilder
-        from aiogram.types import InlineKeyboardButton
-        
         builder = InlineKeyboardBuilder()
+        
+        # Format memory label for next memory
+        if next_memory == 1024:
+            next_memory_label = "1 TB"
+        else:
+            next_memory_label = f"{next_memory} GB"
+        
+        # Format current memory label for display
+        if current_memory == 1024:
+            current_memory_label = "1 TB"
+        else:
+            current_memory_label = f"{current_memory} GB"
+        
         builder.add(InlineKeyboardButton(
-            text=f"{next_memory} GB narxini kiriting", 
+            text=f"{next_memory_label} narxini kiriting", 
             callback_data=f"set_price_{next_memory}"
         ))
         builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"))
         builder.adjust(1)
         
         await message.answer(
-            f"✅ **{current_memory} GB narxlari saqlandi**\n\n"
+            f"✅ **{current_memory_label} narxlari saqlandi**\n\n"
             f"Keyingi xotira hajmi uchun narxlarni kiriting:",
             reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+
+@router.callback_query(F.data == "cancel")
+async def handle_cancel(callback: CallbackQuery, state: FSMContext):
+    """Handle cancel button"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ Ruxsat yo'q!")
+        return
+    
+    current_state = await state.get_state()
+    
+    if current_state == AddModelStates.waiting_for_memory_selection:
+        # Return to admin price panel
+        await state.clear()
+        keyboard = get_admin_price_keyboard()
+        
+        await callback.message.edit_text(
+            "💰 **Narx boshqaruvi**\n\n"
+            "Qurilma modellarini boshqarish:",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    elif current_state == AddModelStates.waiting_for_prices:
+        # Return to admin price panel
+        await state.clear()
+        keyboard = get_admin_price_keyboard()
+        
+        await callback.message.edit_text(
+            "💰 **Narx boshqaruvi**\n\n"
+            "Qurilma modellarini boshqarish:",
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    else:
+        # For other states, just clear and show admin panel
+        await state.clear()
+        keyboard = get_admin_panel_keyboard()
+        
+        await callback.message.edit_text(
+            "⚙️ **Admin panel**\n\n"
+            "Do'konlar va narxlarni boshqarish uchun tanlang:",
+            reply_markup=keyboard,
             parse_mode="Markdown"
         )
 
