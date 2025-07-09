@@ -37,7 +37,7 @@ async def main_menu_handler(callback: CallbackQuery):
     is_admin = user_id in ADMIN_IDS
     language = get_user_language(user_id)
     
-    keyboard = get_main_menu_keyboard(is_admin)
+    keyboard = get_main_menu_keyboard(is_admin, language)
     
     welcome_text = get_text('welcome_title', language) + "\n\n"
     welcome_text += get_text('welcome_description', language) + "\n\n"
@@ -69,7 +69,7 @@ async def map_handler(callback: CallbackQuery):
     """Handle map menu"""
     user_id = callback.from_user.id
     language = get_user_language(user_id)
-    keyboard = get_map_keyboard()
+    keyboard = get_map_keyboard(language)
     
     try:
         await callback.message.edit_text(
@@ -90,7 +90,7 @@ async def nearest_location_handler(callback: CallbackQuery):
     """Handle nearest location request"""
     user_id = callback.from_user.id
     language = get_user_language(user_id)
-    keyboard = get_share_location_keyboard()
+    keyboard = get_share_location_keyboard(language)
     
     try:
         await callback.message.edit_text(
@@ -154,7 +154,7 @@ async def handle_location_shared(message: Message, state: FSMContext):
         # Send location info
         await message.answer(
             location_text,
-            reply_markup=get_location_keyboard(nearest['id']),
+            reply_markup=get_location_keyboard(nearest['id'], language),
             parse_mode="Markdown"
         )
         
@@ -172,12 +172,12 @@ async def handle_location_shared(message: Message, state: FSMContext):
         # Show menu button after location processing
         await message.answer(
             get_text('return_to_menu', language),
-            reply_markup=get_menu_keyboard()
+            reply_markup=get_menu_keyboard(language)
         )
     else:
         await message.answer(
             get_text('no_stores_found', language),
-            reply_markup=get_map_keyboard()
+            reply_markup=get_map_keyboard(language)
         )
 
 @router.callback_query(F.data == "all_locations")
@@ -191,16 +191,16 @@ async def all_locations_handler(callback: CallbackQuery):
         try:
             await callback.message.edit_text(
                 get_text('no_stores_found', language),
-                reply_markup=get_map_keyboard()
+                reply_markup=get_map_keyboard(language)
             )
         except Exception as e:
             await callback.message.answer(
                 get_text('no_stores_found', language),
-                reply_markup=get_map_keyboard()
+                reply_markup=get_map_keyboard(language)
             )
         return
     
-    keyboard = get_locations_pagination_keyboard(locations, page=0)
+    keyboard = get_locations_pagination_keyboard(locations, page=0, language=language)
     
     try:
         await callback.message.edit_text(
@@ -223,7 +223,7 @@ async def locations_pagination_handler(callback: CallbackQuery):
     page = int(callback.data.split("_")[-1])
     locations = get_locations()
     
-    keyboard = get_locations_pagination_keyboard(locations, page=page)
+    keyboard = get_locations_pagination_keyboard(locations, page=page, language=language)
     
     try:
         await callback.message.edit_text(
@@ -268,13 +268,13 @@ async def location_detail_handler(callback: CallbackQuery):
         try:
             await callback.message.edit_text(
                 location_text,
-                reply_markup=get_location_keyboard(location_id),
+                reply_markup=get_location_keyboard(location_id, language),
                 parse_mode="Markdown"
             )
         except Exception as e:
             await callback.message.answer(
                 location_text,
-                reply_markup=get_location_keyboard(location_id),
+                reply_markup=get_location_keyboard(location_id, language),
                 parse_mode="Markdown"
             )
         
@@ -331,17 +331,17 @@ async def price_calculator_handler(callback: CallbackQuery):
         try:
             await callback.message.edit_text(
                 get_text('no_models_available', language),
-                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
+                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS, language)
             )
         except Exception as e:
             await callback.message.answer(
                 get_text('no_models_available', language),
-                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
+                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS, language)
             )
         return
     
     # Create paginated keyboard for models
-    keyboard = get_models_pagination_keyboard(models, page=0)
+    keyboard = get_models_pagination_keyboard(models, page=0, language=language)
     
     try:
         await callback.message.edit_text(
@@ -364,7 +364,7 @@ async def models_pagination_handler(callback: CallbackQuery):
     page = int(callback.data.split("_")[-1])
     models = get_models()
     
-    keyboard = get_models_pagination_keyboard(models, page=page)
+    keyboard = get_models_pagination_keyboard(models, page=page, language=language)
     
     try:
         await callback.message.edit_text(
@@ -395,7 +395,7 @@ async def model_selection_handler(callback: CallbackQuery, state: FSMContext):
     await state.update_data(selected_model_name=model_name)
     await state.set_state(PriceCalculatorStates.selecting_memory)
     
-    keyboard = get_memory_keyboard(model['memories'])
+    keyboard = get_memory_keyboard(model['memories'], language)
     
     try:
         await callback.message.edit_text(
@@ -467,7 +467,7 @@ async def back_to_models_handler(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PriceCalculatorStates.selecting_model)
     
     models = get_models()
-    keyboard = get_models_pagination_keyboard(models, page=0)
+    keyboard = get_models_pagination_keyboard(models, page=0, language=language)
     
     try:
         await callback.message.edit_text(
@@ -591,7 +591,7 @@ async def condition_selection_handler(callback: CallbackQuery, state: FSMContext
     
     # Create keyboard for new calculation
     from keyboards import get_main_menu_keyboard
-    keyboard = get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
+    keyboard = get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS, language)
     
     try:
         await callback.message.edit_text(
@@ -635,7 +635,7 @@ async def back_to_memory_handler(callback: CallbackQuery, state: FSMContext):
     await state.update_data(selected_memory=None)
     await state.set_state(PriceCalculatorStates.selecting_memory)
     
-    keyboard = get_memory_keyboard(model['memories'])
+    keyboard = get_memory_keyboard(model['memories'], language)
     
     try:
         await callback.message.edit_text(
@@ -675,7 +675,7 @@ async def call_center_handler(callback: CallbackQuery):
     # Send new message instead of editing
     await callback.message.answer(
         call_center_text,
-        reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS),
+        reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS, language),
         parse_mode="Markdown"
     )
 
@@ -696,7 +696,7 @@ async def admin_contact_handler(callback: CallbackQuery):
     # Send new message instead of editing
     await callback.message.answer(
         admin_text,
-        reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS),
+        reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS, language),
         parse_mode="Markdown"
     )
 
@@ -708,7 +708,7 @@ async def cancel_handler(callback: CallbackQuery, state: FSMContext):
     is_admin = user_id in ADMIN_IDS
     
     await state.clear()
-    keyboard = get_main_menu_keyboard(is_admin)
+    keyboard = get_main_menu_keyboard(is_admin, language)
     
     welcome_text = get_text('welcome_title', language) + "\n\n"
     welcome_text += get_text('welcome_description', language) + "\n\n"
@@ -744,7 +744,7 @@ async def menu_handler(message: Message):
     user_id = message.from_user.id
     language = get_user_language(user_id)
     is_admin = user_id in ADMIN_IDS
-    keyboard = get_main_menu_keyboard(is_admin)
+    keyboard = get_main_menu_keyboard(is_admin, language)
     
     welcome_text = get_text('welcome_title', language) + "\n\n"
     welcome_text += get_text('welcome_description', language) + "\n\n"
@@ -765,7 +765,7 @@ async def menu_emoji_handler(message: Message):
     user_id = message.from_user.id
     language = get_user_language(user_id)
     is_admin = user_id in ADMIN_IDS
-    keyboard = get_main_menu_keyboard(is_admin)
+    keyboard = get_main_menu_keyboard(is_admin, language)
     
     welcome_text = get_text('welcome_title', language) + "\n\n"
     welcome_text += get_text('welcome_description', language) + "\n\n"

@@ -38,7 +38,7 @@ async def admin_panel_handler(callback: CallbackQuery):
     
     user_id = callback.from_user.id
     language = get_user_language(user_id)
-    keyboard = get_admin_panel_keyboard()
+    keyboard = get_admin_panel_keyboard(language)
     
     await callback.message.edit_text(
         get_text('admin_panel_title', language) + "\n\n" + get_text('admin_panel_description', language),
@@ -55,7 +55,7 @@ async def admin_map_handler(callback: CallbackQuery):
     
     user_id = callback.from_user.id
     language = get_user_language(user_id)
-    keyboard = get_admin_map_keyboard()
+    keyboard = get_admin_map_keyboard(language)
     
     await callback.message.edit_text(
         get_text('admin_map_title', language) + "\n\n" + get_text('admin_map_description', language),
@@ -76,7 +76,7 @@ async def add_location_handler(callback: CallbackQuery, state: FSMContext):
     language = get_user_language(user_id)
     
     await state.set_state(AddLocationStates.waiting_for_name)
-    keyboard = get_cancel_keyboard()
+    keyboard = get_cancel_keyboard(language)
     
     await callback.message.edit_text(
         get_text('add_location_title', language) + "\n\n" + get_text('enter_store_name', language),
@@ -98,14 +98,14 @@ async def handle_location_name(message: Message, state: FSMContext):
     if not message.text:
         await message.answer(
             get_text('please_enter_name', language),
-            reply_markup=get_admin_map_cancel_keyboard()
+            reply_markup=get_admin_map_cancel_keyboard(language)
         )
         return
     
     await state.update_data(name=message.text)
     await state.set_state(AddLocationStates.waiting_for_address)
     
-    keyboard = get_admin_map_cancel_keyboard()
+    keyboard = get_admin_map_cancel_keyboard(language)
     
     await message.answer(
         get_text('name_entered', language, name=message.text) + "\n\n" + get_text('enter_store_address', language),
@@ -127,7 +127,7 @@ async def handle_location_address(message: Message, state: FSMContext):
     if not message.text:
         await message.answer(
             get_text('please_enter_address', language),
-            reply_markup=get_admin_map_cancel_keyboard()
+            reply_markup=get_admin_map_cancel_keyboard(language)
         )
         return
     
@@ -135,7 +135,7 @@ async def handle_location_address(message: Message, state: FSMContext):
     await state.set_state(AddLocationStates.waiting_for_location)
     
     from keyboards import get_share_location_keyboard
-    keyboard = get_share_location_keyboard()
+    keyboard = get_share_location_keyboard(language)
     
     await message.answer(
         get_text('address_entered', language, address=message.text) + "\n\n" + get_text('share_store_location', language),
@@ -161,7 +161,7 @@ async def handle_location_coordinates(message: Message, state: FSMContext):
         print(f"DEBUG: No location in message")
         await message.answer(
             get_text('please_share_location', language),
-            reply_markup=get_admin_map_cancel_keyboard()
+            reply_markup=get_admin_map_cancel_keyboard(language)
         )
         return
     
@@ -178,7 +178,7 @@ async def handle_location_coordinates(message: Message, state: FSMContext):
         print(f"DEBUG: Missing name or address")
         await message.answer(
             get_text('error_restart_admin', language),
-            reply_markup=get_admin_map_keyboard()
+            reply_markup=get_admin_map_keyboard(language)
         )
         await state.clear()
         return
@@ -190,7 +190,7 @@ async def handle_location_coordinates(message: Message, state: FSMContext):
     )
     await state.set_state(AddLocationStates.waiting_for_image)
     
-    keyboard = get_admin_map_cancel_keyboard()
+    keyboard = get_admin_map_cancel_keyboard(language)
     
     await message.answer(
         get_text('coordinates_received', language, lat=message.location.latitude, lon=message.location.longitude) + "\n\n" + get_text('upload_store_image', language),
@@ -219,7 +219,7 @@ async def handle_location_image(message: Message, state: FSMContext):
     if not all([name, address, latitude, longitude]):
         await message.answer(
             get_text('error_restart_admin', language),
-            reply_markup=get_admin_map_keyboard()
+            reply_markup=get_admin_map_keyboard(language)
         )
         await state.clear()
         return
@@ -260,7 +260,7 @@ async def handle_location_image(message: Message, state: FSMContext):
         
         await message.answer(
             success_text,
-            reply_markup=get_admin_map_keyboard(),
+            reply_markup=get_admin_map_keyboard(language),
             parse_mode="Markdown"
         )
         logger.info(f"Location saved successfully for admin {message.from_user.id}")
@@ -268,7 +268,7 @@ async def handle_location_image(message: Message, state: FSMContext):
         print(f"DEBUG: Failed to save location")
         await message.answer(
             get_text('location_save_error', language),
-            reply_markup=get_admin_map_keyboard()
+            reply_markup=get_admin_map_keyboard(language)
         )
         logger.error(f"Failed to save location for admin {message.from_user.id}")
     
@@ -336,20 +336,20 @@ async def refresh_prices_handler(callback: CallbackQuery):
             
             await callback.message.edit_text(
                 message_text,
-                reply_markup=get_admin_price_keyboard(),
+                reply_markup=get_admin_price_keyboard(language),
                 parse_mode="Markdown"
             )
         else:
             await callback.message.edit_text(
                 get_text('sheets_error', language),
-                reply_markup=get_admin_price_keyboard(),
+                reply_markup=get_admin_price_keyboard(language),
                 parse_mode="Markdown"
             )
     except Exception as e:
         logger.error(f"Failed to refresh prices: {e}")
         await callback.message.edit_text(
             get_text('refresh_error', language),
-            reply_markup=get_admin_price_keyboard(),
+            reply_markup=get_admin_price_keyboard(language),
             parse_mode="Markdown"
         )
 
@@ -365,7 +365,7 @@ async def handle_cancel(callback: CallbackQuery, state: FSMContext):
     if current_state and "AddLocationStates" in current_state:
         # Return to admin map panel
         await state.clear()
-        keyboard = get_admin_map_keyboard()
+        keyboard = get_admin_map_keyboard(get_user_language(callback.from_user.id))
         
         await callback.message.edit_text(
             "🗺️ **Xarita boshqaruvi**\n\n"
@@ -376,7 +376,7 @@ async def handle_cancel(callback: CallbackQuery, state: FSMContext):
     else:
         # For other states, just clear and show admin panel
         await state.clear()
-        keyboard = get_admin_panel_keyboard()
+        keyboard = get_admin_panel_keyboard(get_user_language(callback.from_user.id))
         
         await callback.message.edit_text(
             "⚙️ **Admin panel**\n\n"

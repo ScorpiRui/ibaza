@@ -1,59 +1,59 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from languages import get_text
 
-def get_main_menu_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
+def get_main_menu_keyboard(is_admin: bool = False, language: str = 'uz') -> InlineKeyboardMarkup:
     """Main menu keyboard with different options for users and admins"""
     builder = InlineKeyboardBuilder()
     
     # Common buttons for all users
-    builder.add(InlineKeyboardButton(text="🗺️ Do'konlar xaritasi", callback_data="map"))
-    builder.add(InlineKeyboardButton(text="💰 Telefonimni narxla", callback_data="price_calculator"))
-    builder.add(InlineKeyboardButton(text="📅 Nasiya hisoblash", callback_data="installment"))
-    builder.add(InlineKeyboardButton(text="📞 Call center", callback_data="call_center"))
-    builder.add(InlineKeyboardButton(text="👨‍💼 Admin", callback_data="admin_contact"))
+    builder.add(InlineKeyboardButton(text=get_text('menu_map', language), callback_data="map"))
+    builder.add(InlineKeyboardButton(text=get_text('menu_price_calculator', language), callback_data="price_calculator"))
+    builder.add(InlineKeyboardButton(text=get_text('menu_call_center', language), callback_data="call_center"))
+    builder.add(InlineKeyboardButton(text=get_text('menu_admin_contact', language), callback_data="admin_contact"))
     
     # Admin-only buttons
     if is_admin:
-        builder.add(InlineKeyboardButton(text="⚙️ Admin panel", callback_data="admin_panel"))
+        builder.add(InlineKeyboardButton(text=get_text('menu_admin_panel', language), callback_data="admin_panel"))
     
     builder.adjust(1)  # One button per row
     return builder.as_markup()
 
-def get_map_keyboard() -> InlineKeyboardMarkup:
+def get_map_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Map options keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📍 Eng yaqin joylashuv", callback_data="nearest_location"))
-    builder.add(InlineKeyboardButton(text="📋 Barcha joylashuvlar", callback_data="all_locations"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="main_menu"))
+    builder.add(InlineKeyboardButton(text=get_text('nearest_location', language), callback_data="nearest_location"))
+    builder.add(InlineKeyboardButton(text=get_text('all_locations', language), callback_data="all_locations"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="main_menu"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_admin_map_keyboard() -> InlineKeyboardMarkup:
+def get_admin_map_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin map options keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="➕ Joylashuv qo'shish", callback_data="add_location"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_panel"))
+    builder.add(InlineKeyboardButton(text=get_text('add_location', language), callback_data="add_location"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="admin_panel"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_admin_panel_keyboard() -> InlineKeyboardMarkup:
+def get_admin_panel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin panel keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🗺️ Xarita boshqaruvi", callback_data="admin_map"))
-    builder.add(InlineKeyboardButton(text="💰 Narx boshqaruvi", callback_data="admin_price"))
-    builder.add(InlineKeyboardButton(text="🔙 Asosiy menyu", callback_data="main_menu"))
+    builder.add(InlineKeyboardButton(text=get_text('admin_map_management', language), callback_data="admin_map"))
+    builder.add(InlineKeyboardButton(text=get_text('admin_price_management', language), callback_data="admin_price"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="main_menu"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_location_keyboard(location_id: str) -> InlineKeyboardMarkup:
+def get_location_keyboard(location_id: str, language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for individual location with location button"""
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="📍 Joylashuvni ko'rsatish", callback_data=f"show_location_{location_id}"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="all_locations"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="all_locations"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_locations_pagination_keyboard(locations: list, page: int = 0, per_page: int = 5) -> InlineKeyboardMarkup:
+def get_locations_pagination_keyboard(locations: list, page: int = 0, per_page: int = 5, language: str = 'uz') -> InlineKeyboardMarkup:
     """Pagination keyboard for locations list"""
     builder = InlineKeyboardBuilder()
     
@@ -77,11 +77,11 @@ def get_locations_pagination_keyboard(locations: list, page: int = 0, per_page: 
     if row:
         builder.row(*row)
     
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="map"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="map"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_models_pagination_keyboard(models: list, page: int = 0, per_page: int = 8) -> InlineKeyboardMarkup:
+def get_models_pagination_keyboard(models: list, page: int = 0, per_page: int = 8, language: str = 'uz') -> InlineKeyboardMarkup:
     """Pagination keyboard for models list"""
     builder = InlineKeyboardBuilder()
     
@@ -105,11 +105,11 @@ def get_models_pagination_keyboard(models: list, page: int = 0, per_page: int = 
     if row:
         builder.row(*row)
     
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="main_menu"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="main_menu"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_models_keyboard(models: list) -> InlineKeyboardMarkup:
+def get_models_keyboard(models: list, language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for selecting device models"""
     builder = InlineKeyboardBuilder()
     
@@ -119,11 +119,11 @@ def get_models_keyboard(models: list) -> InlineKeyboardMarkup:
             callback_data=f"model_{model['name']}"
         ))
     
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="price_calculator"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="price_calculator"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_memory_keyboard(memories: list) -> InlineKeyboardMarkup:
+def get_memory_keyboard(memories: list, language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for selecting memory options"""
     builder = InlineKeyboardBuilder()
     
@@ -138,54 +138,54 @@ def get_memory_keyboard(memories: list) -> InlineKeyboardMarkup:
             callback_data=f"memory_{memory}"
         ))
     
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="select_model"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="select_model"))
     builder.adjust(2)  # Two buttons per row
     return builder.as_markup()
 
-def get_condition_keyboard() -> InlineKeyboardMarkup:
+def get_condition_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for selecting device condition"""
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="🆕 Ideal", callback_data="condition_new"))
     builder.add(InlineKeyboardButton(text="✅ Yaxshi", callback_data="condition_good"))
     builder.add(InlineKeyboardButton(text="🔄 Ortacha", callback_data="condition_fair"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_memory"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="back_to_memory"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_admin_price_keyboard() -> InlineKeyboardMarkup:
+def get_admin_price_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin price management keyboard - now shows Google Sheets link"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📊 Google Sheets da narxlarni boshqarish", callback_data="admin_price"))
-    builder.add(InlineKeyboardButton(text="🔄 Narxlarni yangilash", callback_data="refresh_prices"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_panel"))
+    builder.add(InlineKeyboardButton(text=get_text('manage_prices_sheets', language), callback_data="admin_price"))
+    builder.add(InlineKeyboardButton(text=get_text('refresh_prices', language), callback_data="refresh_prices"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="admin_panel"))
     builder.adjust(1)
     return builder.as_markup()
 
-def get_cancel_keyboard() -> InlineKeyboardMarkup:
+def get_cancel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Simple cancel keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel"))
+    builder.add(InlineKeyboardButton(text=get_text('cancel', language), callback_data="cancel"))
     return builder.as_markup()
 
-def get_admin_cancel_keyboard() -> InlineKeyboardMarkup:
+def get_admin_cancel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin cancel keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="admin_cancel"))
+    builder.add(InlineKeyboardButton(text=get_text('cancel', language), callback_data="admin_cancel"))
     return builder.as_markup()
 
-def get_admin_map_cancel_keyboard() -> InlineKeyboardMarkup:
+def get_admin_map_cancel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin map cancel keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="admin_map_cancel"))
+    builder.add(InlineKeyboardButton(text=get_text('cancel', language), callback_data="admin_map_cancel"))
     return builder.as_markup()
 
-def get_admin_price_cancel_keyboard() -> InlineKeyboardMarkup:
+def get_admin_price_cancel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Admin price cancel keyboard"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="❌ Bekor qilish", callback_data="admin_price_cancel"))
+    builder.add(InlineKeyboardButton(text=get_text('cancel', language), callback_data="admin_price_cancel"))
     return builder.as_markup()
 
-def get_share_location_keyboard() -> ReplyKeyboardMarkup:
+def get_share_location_keyboard(language: str = 'uz') -> ReplyKeyboardMarkup:
     """Keyboard for sharing location"""
     keyboard = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text="📍 Joylashuvni yuborish", request_location=True)]],
@@ -194,10 +194,10 @@ def get_share_location_keyboard() -> ReplyKeyboardMarkup:
     )
     return keyboard
 
-def get_menu_keyboard() -> ReplyKeyboardMarkup:
+def get_menu_keyboard(language: str = 'uz') -> ReplyKeyboardMarkup:
     """Keyboard with menu button"""
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="🏪 Menu")]],
+        keyboard=[[KeyboardButton(text=get_text('menu_emoji', language))]],
         resize_keyboard=True,
         one_time_keyboard=True
     )
