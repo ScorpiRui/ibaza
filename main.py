@@ -36,19 +36,13 @@ async def start_command(message: Message, state: FSMContext):
     """Handle /start command with language selection"""
     user_id = message.from_user.id
     
-    # Check if user already has a language set
-    current_language = get_user_language(user_id)
-    
-    if current_language == 'uz':  # Default, show language selection
-        await state.set_state(LanguageStates.selecting_language)
-        await message.answer(
-            get_text('select_language', 'uz'),
-            reply_markup=get_language_selection_keyboard(),
-            parse_mode="Markdown"
-        )
-    else:
-        # User already has language, show welcome message
-        await show_welcome_message(message, current_language)
+    # Always show language selection on start
+    await state.set_state(LanguageStates.selecting_language)
+    await message.answer(
+        get_text('select_language', 'uz'),
+        reply_markup=get_language_selection_keyboard(),
+        parse_mode="Markdown"
+    )
 
 @language_router.callback_query(F.data.startswith("lang_"))
 async def language_selection_handler(callback: CallbackQuery, state: FSMContext):

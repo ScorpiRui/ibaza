@@ -5,7 +5,8 @@ from aiogram.fsm.state import State, StatesGroup
 from keyboards import (
     get_main_menu_keyboard, get_map_keyboard, get_locations_pagination_keyboard,
     get_models_keyboard, get_memory_keyboard, get_condition_keyboard,
-    get_location_keyboard, get_share_location_keyboard, get_menu_keyboard
+    get_location_keyboard, get_share_location_keyboard, get_menu_keyboard,
+    get_models_pagination_keyboard
 )
 from utils import (
     get_locations, find_nearest_location, get_models, get_model_by_id,
@@ -49,11 +50,19 @@ async def main_menu_handler(callback: CallbackQuery):
     welcome_text += "\n"
     welcome_text += get_text('welcome_footer', language)
     
-    await callback.message.edit_text(
-        welcome_text,
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            welcome_text,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        # If edit fails, send new message
+        await callback.message.answer(
+            welcome_text,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data == "map")
 async def map_handler(callback: CallbackQuery):
@@ -62,11 +71,19 @@ async def map_handler(callback: CallbackQuery):
     language = get_user_language(user_id)
     keyboard = get_map_keyboard()
     
-    await callback.message.edit_text(
-        get_text('map_title', language) + "\n\n" + get_text('map_description', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('map_title', language) + "\n\n" + get_text('map_description', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        # If edit fails, send new message
+        await callback.message.answer(
+            get_text('map_title', language) + "\n\n" + get_text('map_description', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data == "nearest_location")
 async def nearest_location_handler(callback: CallbackQuery):
@@ -75,12 +92,19 @@ async def nearest_location_handler(callback: CallbackQuery):
     language = get_user_language(user_id)
     keyboard = get_share_location_keyboard()
     
-    await callback.message.answer(
-        get_text('share_location_prompt', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown",
-        one_time_keyboard=True
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('share_location_prompt', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        # If edit fails, send new message
+        await callback.message.answer(
+            get_text('share_location_prompt', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
     await callback.answer()
 
 @router.message(F.location)
@@ -164,19 +188,32 @@ async def all_locations_handler(callback: CallbackQuery):
     locations = get_locations()
     
     if not locations:
-        await callback.message.edit_text(
-            get_text('no_stores_found', language),
-            reply_markup=get_map_keyboard()
-        )
+        try:
+            await callback.message.edit_text(
+                get_text('no_stores_found', language),
+                reply_markup=get_map_keyboard()
+            )
+        except Exception as e:
+            await callback.message.answer(
+                get_text('no_stores_found', language),
+                reply_markup=get_map_keyboard()
+            )
         return
     
     keyboard = get_locations_pagination_keyboard(locations, page=0)
     
-    await callback.message.edit_text(
-        get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data.startswith("locations_page_"))
 async def locations_pagination_handler(callback: CallbackQuery):
@@ -188,11 +225,18 @@ async def locations_pagination_handler(callback: CallbackQuery):
     
     keyboard = get_locations_pagination_keyboard(locations, page=page)
     
-    await callback.message.edit_text(
-        get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('all_stores_title', language) + "\n\n" + get_text('select_store', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data.startswith("location_"))
 async def location_detail_handler(callback: CallbackQuery):
@@ -221,11 +265,18 @@ async def location_detail_handler(callback: CallbackQuery):
         location_text += get_text('view_on_map', language)
         
         # Send location info
-        await callback.message.edit_text(
-            location_text,
-            reply_markup=get_location_keyboard(location_id),
-            parse_mode="Markdown"
-        )
+        try:
+            await callback.message.edit_text(
+                location_text,
+                reply_markup=get_location_keyboard(location_id),
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            await callback.message.answer(
+                location_text,
+                reply_markup=get_location_keyboard(location_id),
+                parse_mode="Markdown"
+            )
         
         # Send image if available
         if location.get('image'):
@@ -255,10 +306,16 @@ async def show_location_handler(callback: CallbackQuery):
             break
     
     if location:
-        await callback.message.answer_location(
-            latitude=location['latitude'],
-            longitude=location['longitude']
-        )
+        try:
+            await callback.message.answer_location(
+                latitude=location['latitude'],
+                longitude=location['longitude']
+            )
+        except Exception as e:
+            # If answer_location fails, try sending as new message
+            await callback.message.answer(
+                f"📍 {location['name']}\nLat: {location['latitude']}, Lon: {location['longitude']}"
+            )
         await callback.answer(get_text('location_sent', language))
     else:
         await callback.answer(get_text('error_occurred', language))
@@ -271,19 +328,56 @@ async def price_calculator_handler(callback: CallbackQuery):
     models = get_models()
     
     if not models:
-        await callback.message.edit_text(
-            get_text('no_models_available', language),
-            reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
-        )
+        try:
+            await callback.message.edit_text(
+                get_text('no_models_available', language),
+                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
+            )
+        except Exception as e:
+            await callback.message.answer(
+                get_text('no_models_available', language),
+                reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
+            )
         return
     
-    keyboard = get_models_keyboard(models)
+    # Create paginated keyboard for models
+    keyboard = get_models_pagination_keyboard(models, page=0)
     
-    await callback.message.edit_text(
-        get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+
+@router.callback_query(F.data.startswith("models_page_"))
+async def models_pagination_handler(callback: CallbackQuery):
+    """Handle models pagination"""
+    user_id = callback.from_user.id
+    language = get_user_language(user_id)
+    page = int(callback.data.split("_")[-1])
+    models = get_models()
+    
+    keyboard = get_models_pagination_keyboard(models, page=page)
+    
+    try:
+        await callback.message.edit_text(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data.startswith("model_"))
 async def model_selection_handler(callback: CallbackQuery, state: FSMContext):
@@ -303,11 +397,18 @@ async def model_selection_handler(callback: CallbackQuery, state: FSMContext):
     
     keyboard = get_memory_keyboard(model['memories'])
     
-    await callback.message.edit_text(
-        get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data.startswith("memory_"))
 async def memory_selection_handler(callback: CallbackQuery, state: FSMContext):
@@ -339,14 +440,47 @@ async def memory_selection_handler(callback: CallbackQuery, state: FSMContext):
     
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text=get_text('got_it', language), callback_data="show_conditions"))
-    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="select_memory"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="back_to_models"))
     builder.adjust(1)
     
-    await callback.message.edit_text(
-        condition_text,
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            condition_text,
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            condition_text,
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+
+@router.callback_query(F.data == "back_to_models")
+async def back_to_models_handler(callback: CallbackQuery, state: FSMContext):
+    """Handle back to models selection"""
+    user_id = callback.from_user.id
+    language = get_user_language(user_id)
+    
+    # Clear memory selection from state
+    await state.update_data(selected_memory=None)
+    await state.set_state(PriceCalculatorStates.selecting_model)
+    
+    models = get_models()
+    keyboard = get_models_pagination_keyboard(models, page=0)
+    
+    try:
+        await callback.message.edit_text(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('price_calculator_title', language) + "\n\n" + get_text('select_model', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data == "show_conditions")
 async def show_conditions_handler(callback: CallbackQuery, state: FSMContext):
@@ -379,11 +513,18 @@ async def show_conditions_handler(callback: CallbackQuery, state: FSMContext):
     
     keyboard = get_condition_keyboard()
     
-    await callback.message.edit_text(
-        get_text('model_selected', language, name=model['name']) + f" {memory_display}\n\n" + get_text('select_condition', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('model_selected', language, name=model['name']) + f" {memory_display}\n\n" + get_text('select_condition', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('model_selected', language, name=model['name']) + f" {memory_display}\n\n" + get_text('select_condition', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data.startswith("condition_"))
 async def condition_selection_handler(callback: CallbackQuery, state: FSMContext):
@@ -452,11 +593,18 @@ async def condition_selection_handler(callback: CallbackQuery, state: FSMContext
     from keyboards import get_main_menu_keyboard
     keyboard = get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS)
     
-    await callback.message.edit_text(
-        response,
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            response,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            response,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
     
     # Clear state
     await state.clear()
@@ -489,11 +637,18 @@ async def back_to_memory_handler(callback: CallbackQuery, state: FSMContext):
     
     keyboard = get_memory_keyboard(model['memories'])
     
-    await callback.message.edit_text(
-        get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            get_text('model_selected', language, name=model['name']) + "\n\n" + get_text('select_memory', language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 @router.callback_query(F.data == "call_center")
 async def call_center_handler(callback: CallbackQuery):
@@ -517,7 +672,8 @@ async def call_center_handler(callback: CallbackQuery):
     call_center_text += get_text('call_center_days', language) + "\n\n"
     call_center_text += get_text('call_center_footer', language)
     
-    await callback.message.edit_text(
+    # Send new message instead of editing
+    await callback.message.answer(
         call_center_text,
         reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS),
         parse_mode="Markdown"
@@ -537,7 +693,8 @@ async def admin_contact_handler(callback: CallbackQuery):
     admin_text += get_text('admin_phone', language) + "\n\n"
     admin_text += get_text('admin_footer', language)
     
-    await callback.message.edit_text(
+    # Send new message instead of editing
+    await callback.message.answer(
         admin_text,
         reply_markup=get_main_menu_keyboard(callback.from_user.id in ADMIN_IDS),
         parse_mode="Markdown"
@@ -564,11 +721,18 @@ async def cancel_handler(callback: CallbackQuery, state: FSMContext):
     welcome_text += "\n"
     welcome_text += get_text('welcome_footer', language)
     
-    await callback.message.edit_text(
-        welcome_text,
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        await callback.message.edit_text(
+            welcome_text,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await callback.message.answer(
+            welcome_text,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
 def register_user_handlers(dp):
     """Register all user handlers"""

@@ -9,8 +9,8 @@ def get_main_menu_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
     builder.add(InlineKeyboardButton(text="🗺️ Do'konlar xaritasi", callback_data="map"))
     builder.add(InlineKeyboardButton(text="💰 Telefonimni narxla", callback_data="price_calculator"))
     builder.add(InlineKeyboardButton(text="📅 Nasiya hisoblash", callback_data="installment"))
-    builder.add(InlineKeyboardButton(text="📞 Call center (+998330170555)", callback_data="call_center"))
-    builder.add(InlineKeyboardButton(text="👨‍💼 Admin (@ibazacallcenter)", callback_data="admin_contact"))
+    builder.add(InlineKeyboardButton(text="📞 Call center", callback_data="call_center"))
+    builder.add(InlineKeyboardButton(text="👨‍💼 Admin", callback_data="admin_contact"))
     
     # Admin-only buttons
     if is_admin:
@@ -78,6 +78,34 @@ def get_locations_pagination_keyboard(locations: list, page: int = 0, per_page: 
         builder.row(*row)
     
     builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="map"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+def get_models_pagination_keyboard(models: list, page: int = 0, per_page: int = 8) -> InlineKeyboardMarkup:
+    """Pagination keyboard for models list"""
+    builder = InlineKeyboardBuilder()
+    
+    start_idx = page * per_page
+    end_idx = start_idx + per_page
+    page_models = models[start_idx:end_idx]
+    
+    for model in page_models:
+        builder.add(InlineKeyboardButton(
+            text=model['name'], 
+            callback_data=f"model_{model['name']}"
+        ))
+    
+    # Pagination buttons
+    row = []
+    if page > 0:
+        row.append(InlineKeyboardButton(text="⬅️", callback_data=f"models_page_{page-1}"))
+    if end_idx < len(models):
+        row.append(InlineKeyboardButton(text="➡️", callback_data=f"models_page_{page+1}"))
+    
+    if row:
+        builder.row(*row)
+    
+    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="main_menu"))
     builder.adjust(1)
     return builder.as_markup()
 
