@@ -47,7 +47,7 @@ async def installment_handler(callback: CallbackQuery, state: FSMContext):
         # Admin flow - ask for total price
         await state.set_state(InstallmentStates.waiting_for_total)
         await callback.message.edit_text(
-            "📅 **Nasiya hisoblagich (Admin)**\n\n"
+            "📅 **Nasiya hisoblash (Admin)**\n\n"
             "Telefonning umumiy narxini USD da kiriting (masalan: 1000):",
             reply_markup=get_cancel_keyboard(),
             parse_mode="Markdown"
@@ -56,7 +56,7 @@ async def installment_handler(callback: CallbackQuery, state: FSMContext):
         # User flow - ask for total price
         await state.set_state(InstallmentStates.waiting_for_total)
         await callback.message.edit_text(
-            "📅 **Nasiya hisoblagich**\n\n"
+            "📅 **Nasiya hisoblash**\n\n"
             "Telefonning narxini USD da kiriting (masalan: 500):",
             reply_markup=get_cancel_keyboard(),
             parse_mode="Markdown"

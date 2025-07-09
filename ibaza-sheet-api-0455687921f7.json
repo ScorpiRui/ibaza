@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "ibaza-sheet-api",
+  "private_key_id": "0455687921f75e3ac2cc55549ed55fe70a8a5f33",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDR81Uk/dvWjdbf\n3H2YZ0N6pNkQterV8P2nfpHe5SblF0jnlkQsmyXb8mWgDKcav3ELt/hPjhTLrn6/\n9p24hOecMElW0u0YVIqEHTX2VG3s0nNZ4U8zMZ1dDZV3mtg4Jmj724wKt4Mok7OU\nW0eERHQqwuKKtJgmB3QVHHezSf8hQC3iUXTwI/N7ojTyeNGTvRL4IN7NZX2YX2Hi\nSx0pS0ZGUIeghdPPbfGpfOpVZS+YcNOu+HI37b+IZbLu8+C1ooBRbfDWMI7XBTxW\nkU4oBLHhCTu0j9bu4GTJJsJ0bsFbC2EggFL1v8IX17J/0h6krfCM5v4fcm2xFzQX\n/AxFlF+tAgMBAAECggEAAhO9Yp7N+Lpzc6lv+mtOZG7xmNLsaIihDuZEE6O+hzST\nexY3yPbTjyqsYWmpyOaNFyRcyfsgZxauDq0xzIrTdqDVD/I/k17ZanWWX0gDvMJy\nnld+QrCYtpV3DDN4U7NXKFfSDwjH9wd0/4k38/WTLFd+P8LIFx1wdaRXvyD+4BqE\nyCQyhBYYk578MwsaSQAWT2M8DJRuVnGnRaydRiYCaA7IzZv3aosqUxRJ0d8+LWlO\noHzm2R1YMLho0tKbvFt3PojWCrncGfQ/+p9FavL7a3Dj+7SrD8O1Xa6XfxnXpBOT\nVDOQCmkY9pqX1nP2db7hlWKGYJ4K2Jf5GC3THHAevwKBgQDqAZYFnmzabINIQdVE\np8bBVWhwqxowfA5a927DVQp869awWLQArcLLCixrdRGg2wHzU0oOLR9OmEosyQCD\nBG+2co21Yb8s3ks9aiLSim8TVNVHvkCERljCbCMitABDo0pYDZ0LVFiuiG3U5ugZ\nbdsa1d74Ate3jfHz32UZKZ/x4wKBgQDlrvGgRiANdqTQMOrcebJz8SkVbJP7kUw0\nJteS0f5X8EryZfvJUpPUg7vAAH4JRioVO5S2uRDwg7YBVuyz205PEOwBT/pR0KyM\n03hteF9N2NnjwQaRhdh4H7BADgH6hbwEjK0XprI9ZIEWhkY8Xch7K3IZlO2G2PJk\nmWEMYeLdLwKBgHNzoN7Y0P/a9dKamGwtEsSkLMkZwewV6Mc8uKsqs+f6O4v516VW\nFXszY8MImU/xfb7dYvYnkQCn5kC+UsBRWgR79Cp/NWEfs6NzUAbsQe0Zt7iTxyT7\nyCL0U0l14YN9dtqGrOrADJjfusCFxBF3v9g3mLBoRqHLKIqXtzt46+7dAoGAddKH\nitNOT/nD1DSz1kPrgkR88cuQIiXH9JzUSzHECrJuj+g3AHCG+yZUosrd3L4MinXU\n9OL8yJSYQhmoNR9UDYU9u/KeE2g7i8ZTabytDw8lvwre5rnFcOG4lTNaWnxOFftg\nM9jEaG/tNHPPBdqKJH0F/A+ExX724Ro5SZPRP+sCgYABUR/IcbW8+N1CafHWAY+x\nwfwaH1mq7U0UNqbPVrajg/Eb21UDVztnfdZUIFyTqnLn4yF0ersfR3bmDtMGtL3b\n6hjzCIhX6mWSfbNwaOm5tP4oNpImot3D1geM19WyZqlyO6RtBBH0uw3ZdPfLZ0ay\nG2d6qXkdRnKBgkxXoa0PxQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "ibaza-431@ibaza-sheet-api.iam.gserviceaccount.com",
+  "client_id": "116572640742934468971",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ibaza-431%40ibaza-sheet-api.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

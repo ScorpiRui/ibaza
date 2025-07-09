@@ -6,9 +6,11 @@ def get_main_menu_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     # Common buttons for all users
-    builder.add(InlineKeyboardButton(text="🗺️ Xarita", callback_data="map"))
-    builder.add(InlineKeyboardButton(text="💰 Narx hisoblagich", callback_data="price_calculator"))
-    builder.add(InlineKeyboardButton(text="📅 Nasiya hisoblagich", callback_data="installment"))
+    builder.add(InlineKeyboardButton(text="🗺️ Do'konlar xaritasi", callback_data="map"))
+    builder.add(InlineKeyboardButton(text="💰 Telefonimni narxla", callback_data="price_calculator"))
+    builder.add(InlineKeyboardButton(text="📅 Nasiya hisoblash", callback_data="installment"))
+    builder.add(InlineKeyboardButton(text="📞 Call center (+998330170555)", callback_data="call_center"))
+    builder.add(InlineKeyboardButton(text="👨‍💼 Admin (@ibazacallcenter)", callback_data="admin_contact"))
     
     # Admin-only buttons
     if is_admin:
@@ -86,7 +88,7 @@ def get_models_keyboard(models: list) -> InlineKeyboardMarkup:
     for model in models:
         builder.add(InlineKeyboardButton(
             text=model['name'], 
-            callback_data=f"model_{model['id']}"
+            callback_data=f"model_{model['name']}"
         ))
     
     builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="price_calculator"))
@@ -98,8 +100,13 @@ def get_memory_keyboard(memories: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     for memory in memories:
+        if memory == 1024:
+            display_text = "1 TB"
+        else:
+            display_text = f"{memory} GB"
+        
         builder.add(InlineKeyboardButton(
-            text=f"{memory} GB", 
+            text=display_text, 
             callback_data=f"memory_{memory}"
         ))
     
@@ -110,19 +117,18 @@ def get_memory_keyboard(memories: list) -> InlineKeyboardMarkup:
 def get_condition_keyboard() -> InlineKeyboardMarkup:
     """Keyboard for selecting device condition"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🆕 Yangi", callback_data="condition_new"))
+    builder.add(InlineKeyboardButton(text="🆕 Ideal", callback_data="condition_new"))
     builder.add(InlineKeyboardButton(text="✅ Yaxshi", callback_data="condition_good"))
-    builder.add(InlineKeyboardButton(text="🔄 O'rtacha", callback_data="condition_fair"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="select_memory"))
+    builder.add(InlineKeyboardButton(text="🔄 Ortacha", callback_data="condition_fair"))
+    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_memory"))
     builder.adjust(1)
     return builder.as_markup()
 
 def get_admin_price_keyboard() -> InlineKeyboardMarkup:
-    """Admin price management keyboard"""
+    """Admin price management keyboard - now shows Google Sheets link"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="➕ Model qo'shish", callback_data="add_model"))
-    builder.add(InlineKeyboardButton(text="✏️ Modellarni tahrirlash", callback_data="edit_models"))
-    builder.add(InlineKeyboardButton(text="🗑️ Modellarni o'chirish", callback_data="delete_models"))
+    builder.add(InlineKeyboardButton(text="📊 Google Sheets da narxlarni boshqarish", callback_data="admin_price"))
+    builder.add(InlineKeyboardButton(text="🔄 Narxlarni yangilash", callback_data="refresh_prices"))
     builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_panel"))
     builder.adjust(1)
     return builder.as_markup()
@@ -169,49 +175,16 @@ def get_menu_keyboard() -> ReplyKeyboardMarkup:
     )
     return keyboard
 
-def get_models_edit_keyboard(models: list) -> InlineKeyboardMarkup:
-    """Keyboard for editing models"""
-    builder = InlineKeyboardBuilder()
+def get_language_selection_keyboard():
+    """Get language selection keyboard"""
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    from aiogram.types import InlineKeyboardButton
     
-    for model in models:
-        builder.add(InlineKeyboardButton(
-            text=f"✏️ {model['name']}", 
-            callback_data=f"edit_model_{model['id']}"
-        ))
-    
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_price"))
-    builder.adjust(1)
-    return builder.as_markup()
-
-def get_models_delete_keyboard(models: list) -> InlineKeyboardMarkup:
-    """Keyboard for deleting models"""
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="lang_uz"))
+    builder.add(InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang_ru"))
+    builder.add(InlineKeyboardButton(text="🇺🇸 English", callback_data="lang_eng"))
+    builder.adjust(1)
     
-    for model in models:
-        builder.add(InlineKeyboardButton(
-            text=f"🗑️ {model['name']}", 
-            callback_data=f"delete_model_{model['id']}"
-        ))
-    
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin_price"))
-    builder.adjust(1)
-    return builder.as_markup()
-
-def get_model_edit_options_keyboard(model_id: str) -> InlineKeyboardMarkup:
-    """Keyboard for model edit options"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="✏️ Nomi", callback_data=f"edit_model_name_{model_id}"))
-    builder.add(InlineKeyboardButton(text="💾 Xotira hajmlari", callback_data=f"edit_model_memories_{model_id}"))
-    builder.add(InlineKeyboardButton(text="💰 Narxlari", callback_data=f"edit_model_prices_{model_id}"))
-    builder.add(InlineKeyboardButton(text="🔙 Orqaga", callback_data="edit_models"))
-    builder.adjust(1)
-    return builder.as_markup()
-
-def get_confirm_delete_keyboard(model_id: str) -> InlineKeyboardMarkup:
-    """Keyboard for confirming model deletion"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="✅ Ha, o'chirish", callback_data=f"confirm_delete_{model_id}"))
-    builder.add(InlineKeyboardButton(text="❌ Yo'q, bekor qilish", callback_data="delete_models"))
-    builder.adjust(1)
     return builder.as_markup()
 

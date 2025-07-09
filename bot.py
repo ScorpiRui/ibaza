@@ -7,6 +7,7 @@ from config import BOT_TOKEN, ADMIN_IDS
 from handlers.user import register_user_handlers
 from handlers.admin import register_admin_handlers
 from handlers.installment import register_installment_handlers
+from utils import initialize_default_data
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,9 +29,12 @@ async def cmd_start(message: Message):
     is_admin = user_id in ADMIN_IDS
     
     welcome_text = (
-        "🏪 **iBaza Tech Resale Market** ga xush kelibsiz!\n\n"
-        "Biz sizga eng yaxshi texnologiya mahsulotlarini taklif qilamiz.\n"
-        "Quyidagi xizmatlardan foydalanishingiz mumkin:"
+        "🏪 **iBaza** telefon va gadgetlar olamiga xush kelibsiz\n\n"
+        "Biz sizga eng yaxshi texnologik mahsulotlarni xarid qilishda quyidagi xizmatlarni taklif qilamiz:\n\n"
+        "• Qayerdan va qanday qilib eng yaxshi narxlarda xarid qilish\n"
+        "• Nasiya (muddatli to'lov) asosida xarid qilish imkoniyati\n"
+        "• Telefon va boshqa qurilmalar narxini aniqlab berish\n\n"
+        "Sifatli, qulay va ishonchli xizmatlar biz bilan!"
     )
     
     from keyboards import get_main_menu_keyboard
@@ -40,7 +44,14 @@ async def cmd_start(message: Message):
 
 async def main():
     """Main function to start the bot"""
-    logger.info("Bot starting...")
+    logger.info("Starting iBaza Tech Resale Market Bot...")
+    
+    # Initialize default data (locations and Google Sheets template)
+    logger.info("Initializing default data...")
+    initialize_default_data()
+    
+    # Start the bot
+    logger.info("Bot is starting...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

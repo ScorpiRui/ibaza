@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # File paths for data storage
 LOCATIONS_FILE = "storage/locations.json"
-MODELS_FILE = "storage/models.json"
+USER_LANGUAGES_FILE = "storage/user_languages.json"
 
 # Ensure storage directory exists
 os.makedirs("storage", exist_ok=True)
@@ -35,8 +35,15 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
+def format_distance(distance: float) -> str:
+    """Format distance for display"""
+    if distance < 1:
+        return f"{int(distance * 1000)} m"
+    else:
+        return f"{distance:.1f} km"
+
 def find_nearest_location(user_lat: float, user_lon: float, locations: List[Dict]) -> Optional[Dict]:
-    """Find the nearest location to user's coordinates"""
+    """Find the nearest location to user coordinates"""
     if not locations:
         return None
     
@@ -51,14 +58,12 @@ def find_nearest_location(user_lat: float, user_lon: float, locations: List[Dict
         
         if distance < min_distance:
             min_distance = distance
-            nearest = location
-    
-    if nearest:
-        nearest['distance'] = round(min_distance, 2)
+            nearest = location.copy()
+            nearest['distance'] = distance
     
     return nearest
 
-def load_json_data(file_path: str) -> List[Dict]:
+def load_json_data(file_path: str) -> Any:
     """Load data from JSON file"""
     try:
         if os.path.exists(file_path):
@@ -66,12 +71,12 @@ def load_json_data(file_path: str) -> List[Dict]:
                 return json.load(f)
     except (json.JSONDecodeError, FileNotFoundError) as e:
         logger.error(f"Error loading data from {file_path}: {e}")
-    return []
+    return {} if 'user_languages' in file_path else []
 
-def save_json_data(file_path: str, data: List[Dict]) -> bool:
+def save_json_data(file_path: str, data: Any) -> bool:
     """Save data to JSON file"""
     try:
-        logger.info(f"Saving data to {file_path}: {len(data)} items")
+        logger.info(f"Saving data to {file_path}: {len(data) if isinstance(data, (list, dict)) else 'unknown'} items")
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         logger.info(f"Successfully saved data to {file_path}")
@@ -80,10 +85,7 @@ def save_json_data(file_path: str, data: List[Dict]) -> bool:
         logger.error(f"Error saving data to {file_path}: {e}")
         return False
 
-def get_locations() -> List[Dict]:
-    """Get all locations from storage"""
-    return load_json_data(LOCATIONS_FILE)
-
+# Location functions (using local JSON storage)
 def save_location(location: Dict) -> bool:
     """Save a new location to storage"""
     logger.info(f"Attempting to save location: {location}")
@@ -98,6 +100,10 @@ def save_location(location: Dict) -> bool:
     else:
         location['id'] = '1'
     
+    # Set default image if not provided
+    if 'image' not in location:
+        location['image'] = None
+    
     logger.info(f"Generated ID for new location: {location['id']}")
     
     locations.append(location)
@@ -107,80 +113,162 @@ def save_location(location: Dict) -> bool:
     logger.info(f"Save result: {result}")
     return result
 
+def get_locations() -> List[Dict]:
+    """Get all locations from storage"""
+    return load_json_data(LOCATIONS_FILE)
+
+def get_location_by_id(location_id: str) -> Optional[Dict]:
+    """Get location by ID"""
+    locations = get_locations()
+    for location in locations:
+        if location.get('id') == location_id:
+            return location
+    return None
+
+# Model functions (using Google Sheets)
 def get_models() -> List[Dict]:
-    """Get all models from storage"""
-    return load_json_data(MODELS_FILE)
-
-def save_model(model: Dict) -> bool:
-    """Save a new model to storage"""
-    models = get_models()
-    
-    # Generate unique ID
-    if models:
-        max_id = max(int(m['id']) for m in models)
-        model['id'] = str(max_id + 1)
-    else:
-        model['id'] = '1'
-    
-    models.append(model)
-    return save_json_data(MODELS_FILE, models)
-
-def update_model(model_id: str, updated_data: Dict) -> bool:
-    """Update an existing model in storage"""
-    models = get_models()
-    
-    for i, model in enumerate(models):
-        if model['id'] == model_id:
-            # Preserve the ID and update other fields
-            updated_data['id'] = model_id
-            models[i] = updated_data
-            return save_json_data(MODELS_FILE, models)
-    
-    return False
-
-def delete_model(model_id: str) -> bool:
-    """Delete a model from storage"""
-    models = get_models()
-    
-    for i, model in enumerate(models):
-        if model['id'] == model_id:
-            del models[i]
-            return save_json_data(MODELS_FILE, models)
-    
-    return False
+    """Get all models from Google Sheets"""
+    try:
+        from sheets_service import get_sheets_service
+        service = get_sheets_service()
+        return service.get_all_models()
+    except Exception as e:
+        logger.error(f"Failed to get models from Google Sheets: {e}")
+        return []
 
 def get_model_by_id(model_id: str) -> Optional[Dict]:
-    """Get model by ID"""
+    """Get model by ID (for backward compatibility)"""
+    models = get_models()
+    try:
+        index = int(model_id) - 1
+        if 0 <= index < len(models):
+            return models[index]
+    except (ValueError, IndexError):
+        pass
+    return None
+
+def get_model_by_name(model_name: str) -> Optional[Dict]:
+    """Get model by name"""
     models = get_models()
     for model in models:
-        if model['id'] == model_id:
+        if model.get('name') == model_name:
             return model
     return None
 
-def get_price_by_condition(model: Dict, memory: int, condition: str) -> Optional[float]:
-    """Get price for specific model, memory and condition"""
-    if 'prices' not in model:
+def get_price_by_condition(model: Dict, memory: int, condition: str) -> Optional[int]:
+    """Get price for specific model, memory, and condition"""
+    if not model or 'prices' not in model:
         return None
     
     memory_str = str(memory)
     if memory_str not in model['prices']:
         return None
     
-    if condition not in model['prices'][memory_str]:
-        return None
-    
-    return model['prices'][memory_str][condition]
+    prices = model['prices'][memory_str]
+    return prices.get(condition)
 
-def format_price(price: float) -> str:
-    """Format price for display"""
-    return f"{price:,.0f} so'm"
+def format_price(price: int) -> str:
+    """Format price for display in USD"""
+    return f"${price:,}"
 
-def format_distance(distance: float) -> str:
-    """Format distance for display"""
-    if distance < 1:
-        return f"{distance * 1000:.0f} m"
-    else:
-        return f"{distance:.1f} km"
+# Legacy functions for backward compatibility (now using Google Sheets)
+def save_model(model_data: Dict) -> bool:
+    """Save model to Google Sheets (legacy function)"""
+    try:
+        from sheets_service import get_sheets_service
+        service = get_sheets_service()
+        
+        model_name = model_data.get('name')
+        if not model_name:
+            logger.error("Model name is required")
+            return False
+            
+        memories = model_data.get('memories', [])
+        prices = model_data.get('prices', {})
+        
+        success = True
+        for memory in memories:
+            memory_prices = prices.get(str(memory), {})
+            if service.add_model(
+                model_name, memory,
+                memory_prices.get('new', 0),
+                memory_prices.get('good', 0),
+                memory_prices.get('fair', 0)
+            ):
+                logger.info(f"Added model {model_name} {memory}GB to Google Sheets")
+            else:
+                success = False
+                logger.error(f"Failed to add model {model_name} {memory}GB to Google Sheets")
+        
+        return success
+    except Exception as e:
+        logger.error(f"Failed to save model to Google Sheets: {e}")
+        return False
+
+def update_model(model_id: str, updated_model: Dict) -> bool:
+    """Update model in Google Sheets (legacy function)"""
+    try:
+        from sheets_service import get_sheets_service
+        service = get_sheets_service()
+        
+        model_name = updated_model.get('name')
+        if not model_name:
+            logger.error("Model name is required")
+            return False
+            
+        memories = updated_model.get('memories', [])
+        prices = updated_model.get('prices', {})
+        
+        success = True
+        for memory in memories:
+            memory_prices = prices.get(str(memory), {})
+            if service.update_model_price(
+                model_name, memory,
+                memory_prices.get('new', 0),
+                memory_prices.get('good', 0),
+                memory_prices.get('fair', 0)
+            ):
+                logger.info(f"Updated model {model_name} {memory}GB in Google Sheets")
+            else:
+                success = False
+                logger.error(f"Failed to update model {model_name} {memory}GB in Google Sheets")
+        
+        return success
+    except Exception as e:
+        logger.error(f"Failed to update model in Google Sheets: {e}")
+        return False
+
+def delete_model(model_id: str) -> bool:
+    """Delete model from Google Sheets (legacy function)"""
+    try:
+        from sheets_service import get_sheets_service
+        service = get_sheets_service()
+        
+        # Get the model to delete
+        model = get_model_by_id(model_id)
+        if not model:
+            logger.error(f"Model with ID {model_id} not found")
+            return False
+        
+        model_name = model.get('name')
+        if not model_name:
+            logger.error("Model name is required")
+            return False
+            
+        memories = model.get('memories', [])
+        
+        success = True
+        for memory in memories:
+            if service.delete_model(model_name, memory):
+                logger.info(f"Deleted model {model_name} {memory}GB from Google Sheets")
+            else:
+                success = False
+                logger.error(f"Failed to delete model {model_name} {memory}GB from Google Sheets")
+        
+        return success
+    except Exception as e:
+        logger.error(f"Failed to delete model from Google Sheets: {e}")
+        return False
 
 # Initialize default data if files don't exist
 def initialize_default_data():
@@ -193,44 +281,49 @@ def initialize_default_data():
                 "name": "iBaza Toshkent markazi",
                 "address": "Toshkent shahri, Chilonzor tumani, 1-mavze",
                 "latitude": 41.2995,
-                "longitude": 69.2401
+                "longitude": 69.2401,
+                "image": None
             },
             {
                 "id": "2", 
                 "name": "iBaza Samarqand filiali",
                 "address": "Samarqand shahri, Registon ko'chasi, 15-uy",
                 "latitude": 39.6270,
-                "longitude": 66.9749
+                "longitude": 66.9749,
+                "image": None
             }
         ]
         save_json_data(LOCATIONS_FILE, default_locations)
     
-    # Initialize models if empty
-    if not get_models():
-        default_models = [
-            {
-                "id": "1",
-                "name": "iPhone 14 Pro",
-                "memories": [128, 256, 512, 1024],
-                "prices": {
-                    "128": {"new": 15000000, "good": 12000000, "fair": 9000000},
-                    "256": {"new": 17000000, "good": 14000000, "fair": 11000000},
-                    "512": {"new": 20000000, "good": 17000000, "fair": 14000000},
-                    "1024": {"new": 25000000, "good": 22000000, "fair": 19000000}
-                }
-            },
-            {
-                "id": "2",
-                "name": "Samsung Galaxy S23",
-                "memories": [128, 256, 512],
-                "prices": {
-                    "128": {"new": 12000000, "good": 10000000, "fair": 8000000},
-                    "256": {"new": 14000000, "good": 12000000, "fair": 10000000},
-                    "512": {"new": 17000000, "good": 15000000, "fair": 13000000}
-                }
-            }
-        ]
-        save_json_data(MODELS_FILE, default_models)
+    # Initialize Google Sheets template if needed
+    try:
+        from sheets_service import get_sheets_service
+        service = get_sheets_service()
+        service.create_template()
+        logger.info("Google Sheets template initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Google Sheets template: {e}") 
 
-# Run initialization
-initialize_default_data() 
+# Language management functions
+def get_user_language(user_id: int) -> str:
+    """Get user's preferred language"""
+    try:
+        user_languages = load_json_data(USER_LANGUAGES_FILE)
+        if isinstance(user_languages, dict):
+            return user_languages.get(str(user_id), 'uz')  # Default to Uzbek
+        return 'uz'
+    except Exception as e:
+        logger.error(f"Error getting user language: {e}")
+        return 'uz'
+
+def set_user_language(user_id: int, language: str) -> bool:
+    """Set user's preferred language"""
+    try:
+        user_languages = load_json_data(USER_LANGUAGES_FILE)
+        if not isinstance(user_languages, dict):
+            user_languages = {}
+        user_languages[str(user_id)] = language
+        return save_json_data(USER_LANGUAGES_FILE, user_languages)
+    except Exception as e:
+        logger.error(f"Error setting user language: {e}")
+        return False 
