@@ -48,7 +48,7 @@ def get_admin_panel_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
 def get_location_keyboard(location_id: str, language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for individual location with location button"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📍 Joylashuvni ko'rsatish", callback_data=f"show_location_{location_id}"))
+    builder.add(InlineKeyboardButton(text=get_text('show_location', language), callback_data=f"show_location_{location_id}"))
     builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="all_locations"))
     builder.adjust(1)
     return builder.as_markup()
@@ -138,16 +138,16 @@ def get_memory_keyboard(memories: list, language: str = 'uz') -> InlineKeyboardM
             callback_data=f"memory_{memory}"
         ))
     
-    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="select_model"))
+    builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="back_to_models"))
     builder.adjust(2)  # Two buttons per row
     return builder.as_markup()
 
 def get_condition_keyboard(language: str = 'uz') -> InlineKeyboardMarkup:
     """Keyboard for selecting device condition"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🆕 Ideal", callback_data="condition_new"))
-    builder.add(InlineKeyboardButton(text="✅ Yaxshi", callback_data="condition_good"))
-    builder.add(InlineKeyboardButton(text="🔄 Ortacha", callback_data="condition_fair"))
+    builder.add(InlineKeyboardButton(text=get_text('condition_new_short', language), callback_data="condition_new"))
+    builder.add(InlineKeyboardButton(text=get_text('condition_good_short', language), callback_data="condition_good"))
+    builder.add(InlineKeyboardButton(text=get_text('condition_fair_short', language), callback_data="condition_fair"))
     builder.add(InlineKeyboardButton(text=get_text('back', language), callback_data="back_to_memory"))
     builder.adjust(1)
     return builder.as_markup()
@@ -188,7 +188,7 @@ def get_admin_price_cancel_keyboard(language: str = 'uz') -> InlineKeyboardMarku
 def get_share_location_keyboard(language: str = 'uz') -> ReplyKeyboardMarkup:
     """Keyboard for sharing location"""
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📍 Joylashuvni yuborish", request_location=True)]],
+        keyboard=[[KeyboardButton(text=get_text('share_location', language), request_location=True)]],
         resize_keyboard=True,
         one_time_keyboard=True
     )
@@ -209,9 +209,9 @@ def get_language_selection_keyboard():
     from aiogram.types import InlineKeyboardButton
     
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🇺🇿 O'zbekcha", callback_data="lang_uz"))
-    builder.add(InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang_ru"))
-    builder.add(InlineKeyboardButton(text="🇺🇸 English", callback_data="lang_eng"))
+    builder.add(InlineKeyboardButton(text=get_text('language_uzbek', 'uz'), callback_data="lang_uz"))
+    builder.add(InlineKeyboardButton(text=get_text('language_russian', 'ru'), callback_data="lang_ru"))
+    builder.add(InlineKeyboardButton(text=get_text('language_english', 'eng'), callback_data="lang_eng"))
     builder.adjust(1)
     
     return builder.as_markup()

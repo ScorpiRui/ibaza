@@ -151,23 +151,31 @@ async def handle_location_shared(message: Message, state: FSMContext):
         
         location_text += get_text('view_on_map', language)
         
-        # Send location info
-        await message.answer(
-            location_text,
-            reply_markup=get_location_keyboard(nearest['id'], language),
-            parse_mode="Markdown"
-        )
-        
-        # Send image if available
+        # Send image with caption and inline buttons if image is available
         if nearest.get('image'):
             try:
                 await message.answer_photo(
                     photo=nearest['image'],
-                    caption=get_text('store_name', language, name=nearest['name']) + f" - {distance_text} uzoqlikda"
+                    caption=location_text,
+                    reply_markup=get_location_keyboard(nearest['id'], language),
+                    parse_mode="Markdown"
                 )
             except Exception as e:
                 logger.error(f"Failed to send nearest location image: {e}")
+                # Fallback to text message if image fails
+                await message.answer(
+                    location_text,
+                    reply_markup=get_location_keyboard(nearest['id'], language),
+                    parse_mode="Markdown"
+                )
                 await message.answer(get_text('image_load_error', language))
+        else:
+            # Send text message with inline buttons if no image
+            await message.answer(
+                location_text,
+                reply_markup=get_location_keyboard(nearest['id'], language),
+                parse_mode="Markdown"
+            )
         
         # Show menu button after location processing
         await message.answer(
@@ -559,9 +567,9 @@ async def condition_selection_handler(callback: CallbackQuery, state: FSMContext
     
     # Format condition display
     condition_display = {
-        'new': '🆕 Ideal',
-        'good': '✅ Yaxshi', 
-        'fair': '🔄 Ortacha'
+        'new': get_text('condition_new_short', language),
+        'good': get_text('condition_good_short', language), 
+        'fair': get_text('condition_fair_short', language)
     }.get(condition, condition)
     
     # Format memory display
